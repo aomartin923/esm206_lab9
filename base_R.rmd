@@ -1,0 +1,216 @@
+---
+title: "Packageless coding baseR"
+author: "Ali Martin"
+date: "11/26/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Creating a vector 
+
+```{r}
+#numeric vector
+my_vector <- vector(mode = "numeric", length = 100)
+
+#logical vector
+my_second_vector <- vector(mode = "logical", length = 20)
+```
+
+## vector Properties 
+
+### Length
+
+```{r}
+#length of my vector
+length(my_vector)
+length(my_second_vector)
+```
+
+### Class
+
+```{r}
+#what's in my vector?
+class(my_vector)
+class(my_second_vector)
+```
+
+### Indexing (accessing) vectors
+
+```{r}
+# using c to create a vector
+my_vector <- c(1:50)
+
+# what's the first element? 
+my_vector[1]
+
+# what's the last element?
+my_vector[-1] #pulls everything else but first element
+
+# what's the seventh element
+my_vector[7]
+
+# select a range from a vector
+my_vector[3:7]
+```
+
+## Matrices
+
+### creating matrices
+
+```{r}
+# create a 10 x10 matrix full of NA's
+
+my_matrix <- matrix(data = 1:100, nrow = 20, ncol = 5)
+```
+
+### matrix properties
+
+### dimensions
+
+```{r}
+# what are the dimensions?
+dim(my_matrix) #number of rows is always first, second is number of cols
+```
+
+### Length
+
+```{r}
+# how many elements are there?
+length(my_matrix) #there are 100 elements
+```
+
+#### Class
+
+```{r}
+class(my_matrix)
+```
+
+### Indexing
+
+```{r}
+my_matrix[2,] # extract values from 2nd row
+
+# index a column
+my_matrix[,3] #extract values from 3rd column
+
+# index a given cell
+my_matrix[8,3] 
+
+# index and replace
+my_matrix[8,3] <- 100000
+
+# replace an entire column
+my_matrix[,5] <- 10
+
+```
+
+# Control flow
+
+## `for` loops 
+
+variable (counter), sequence, expression
+
+```{r}
+for (i in 1:10)( #counter is i, sequence is 1:10
+  print ('Hello world') #expression
+)
+```
+
+# generating random numbers
+
+```{r}
+rnorm(n = 5, mean = 10, sd = 2) #rnorm is generating random numbers
+```
+
+# Let's combine all of the above
+
+we will use `numeric` to create an empty vector
+we will use `for` to iterate along items of the empty vector
+we will use `[]` to access each slot and fill in that empty vector
+we will use `rnorm` to sample values from a random normal distribution
+We will plot the trend
+
+
+
+
+## writing the code down
+
+
+```{r}
+# set up model parameters
+K <- 100
+nsteps <- 100
+mu <- 0.4
+sigma <- 1
+
+#set up model objects
+
+N <- vector(mode = "numeric", length = nsteps)
+N[ 1] <- 25
+
+# model it
+for(t in 2:nsteps){
+r <- rnorm(n = 1, mean = mu, sd = sigma)
+N[t] <- N[t-1] + r* (1-(N[t-1] / K))
+} # write expression in squiggly brackets
+
+
+# Visualize it
+plot(N)
+```
+
+# Something more
+We will use `matrix` to create an empty matrix (rows are time, columns are runs) We will repeat the process
+
+```{r}
+# set up model parameters
+
+K <- 100
+nsteps <- 100
+mu <- 0.4
+sigma <- 1
+
+#set up model objects
+
+N <- matrix(data = NA, nrow = nsteps, ncol = 100)
+N[ 1,] <- 25
+
+# model it
+
+for(t in 2:nsteps){
+r <- rnorm(n = 100 , mean = mu, sd = sigma)
+N[t, ] <- N[t-1 , ] + r * ( 1 - (N[t-1,] / K))
+} # write expression in squiggly brackets
+
+
+# Visualize it (plot matrices using matplot)
+
+matplot(N, type = "l") # type linear
+```
+
+# Bring in your friends!
+
+convert it to things we know about: `ggplot2`
+
+```{r}
+# load tidyverse
+library(tidyverse)
+
+#create data frame
+my_data <- as_tibble(N) %>% 
+  mutate(time = 1:nsteps) %>% 
+  gather(run, N,-time )
+
+#gather takes all observations in columns to combine into run, we want it to leave out time
+
+#visualize it
+ggplot(data = my_data, mapping = aes(x = time, y = N)) +
+  geom_line(aes(group = run), size = 0.1, alpha = 0.5) +
+  stat_summary(geom = "line", fun = mean, color = "red", size = 1) +
+  theme_bw()+
+  labs(x = "Time (years", y = "Population size (N)")
+```
+
